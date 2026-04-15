@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -25,6 +26,8 @@ import java.util.Map;
  *     <tr><td>{@code EntityNotFoundException}</td><td>404 Not Found</td><td>Buscar/actualizar/eliminar con un ID inexistente</td></tr>
  *     <tr><td>{@code IllegalArgumentException}</td><td>400 Bad Request</td><td>Email duplicado u otras reglas de negocio</td></tr>
  *     <tr><td>{@code MethodArgumentNotValidException}</td><td>400 Bad Request</td><td>Falla de validación en {@code @Valid} (campos vacíos, formato inválido, etc.)</td></tr>
+ *     <tr><td>{@code MethodArgumentTypeMismatchException}</td><td>400 Bad Request</td><td>Parámetro con formato inválido en la URL (ej: UUID mal formado)</td></tr>
+ *     <tr><td>{@code Exception} (genérica)</td><td>500 Internal Server Error</td><td>Cualquier error inesperado no capturado por los handlers anteriores</td></tr>
  * </table>
  *
  * @author estetica
@@ -101,5 +104,51 @@ public class GlobalExceptionHandler {
         body.put("mensajes", errores);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    /**
+     * Captura {@link MethodArgumentTypeMismatchException} y devuelve un {@code 400 Bad Request}.
+     *
+     * <p>Se lanza cuando un parámetro de la URL no puede convertirse al tipo esperado.
+     * El caso más común es cuando se pasa un valor que no tiene formato UUID válido
+     * en un {@code @PathVariable UUID id} (ej: {@code GET /api/servicios/abc123}).</p>
+     *
+     * @param ex la excepción capturada con el detalle del parámetro inválido
+     * @return respuesta HTTP 400 con timestamp, status, tipo de error y mensaje descriptivo
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String mensaje = String.format("El parámetro '%s' con valor '%s' no tiene un formato válido. Se esperaba tipo %s.",
+                ex.getName(), ex.getValue(),
+                ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "desconocido");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", 400);
+        body.put("error", "Parámetro inválido");
+        body.put("mensaje", mensaje);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    /**
+     * Handler genérico de último recurso para cualquier excepción no capturada.
+     *
+     * <p>Si ninguno de los handlers anteriores captura la excepción, este método
+     * la intercepta y devuelve un {@code 500 Internal Server Error} con un mensaje
+     * genérico (sin exponer detalles internos del servidor por seguridad).</p>
+     *
+     * @param ex la excepción no capturada
+     * @return respuesta HTTP 500 con timestamp, status, tipo de error y mensaje genérico
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", 500);
+        body.put("error", "Error interno del servidor");
+        body.put("mensaje", "Ocurrió un error inesperado. Contacte al administrador.");
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }

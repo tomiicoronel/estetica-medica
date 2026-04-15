@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -87,6 +89,18 @@ public class Profesional {
     @Size(max = 100, message = "La especialidad no puede superar los 100 caracteres")
     @Column(name = "especialidad", length = 100)
     private String especialidad;
+
+    /**
+     * Lista de servicios ofrecidos por esta profesional.
+     *
+     * <p>Relación {@code OneToMany} bidireccional mapeada por el campo {@code profesional} de la entidad
+     * {@link Servicio}. {@code cascade = ALL} propaga todas las operaciones (persist, merge, remove)
+     * a los servicios asociados. {@code orphanRemoval = true} elimina automáticamente los servicios
+     * que se desvinculen de la profesional.</p>
+     */
+    @OneToMany(mappedBy = "profesional", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Servicio> servicios = new ArrayList<>();
 
     /** Fecha y hora en que se creó el registro. Se setea automáticamente y no se puede modificar. */
     @Column(name = "creado_en", updatable = false)
