@@ -38,8 +38,7 @@ public class ProfesionalController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProfesionalResponse> actualizar(@PathVariable UUID id,
-                                                          @Valid @RequestBody ProfesionalRequest request) {
+    public ResponseEntity<ProfesionalResponse> actualizar(@PathVariable UUID id, @Valid @RequestBody ProfesionalRequest request) {
         ProfesionalResponse response = profesionalService.actualizar(id, request);
         return ResponseEntity.ok(response);
     }

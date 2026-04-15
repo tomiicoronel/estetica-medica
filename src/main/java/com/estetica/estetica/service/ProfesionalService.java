@@ -65,7 +65,7 @@ public class ProfesionalService {
         profesional.setTelefono(request.getTelefono());
         profesional.setEspecialidad(request.getEspecialidad());
 
-        Profesional actualizado = profesionalRepository.save(profesional);
+        Profesional actualizado = profesionalRepository.saveAndFlush(profesional);
         return toResponse(actualizado);
     }
 
