@@ -151,14 +151,16 @@ public class ServicioService {
      * Se usa {@code saveAndFlush()} para forzar la escritura inmediata y que
      * {@code @PreUpdate} actualice {@code actualizadoEn}.</p>
      *
-     * <p>Si el request incluye un {@code profesionalId} diferente, el servicio se reasigna
-     * a la nueva profesional (siempre que exista).</p>
+     * <p>El servicio siempre mantiene su profesional original. Si el {@code profesionalId}
+     * del request no coincide con el de la profesional dueña del servicio, se lanza una excepción.
+     * Esto garantiza el aislamiento por tenant: un servicio de María no puede pasarse a Laura.</p>
      *
      * @param id      el UUID del servicio a actualizar
      * @param request los nuevos datos del servicio
      * @return {@link ServicioResponse} con los datos actualizados
-     * @throws EntityNotFoundException  si no existe el servicio o la profesional
-     * @throws IllegalArgumentException si el nuevo nombre ya existe para esa profesional
+     * @throws EntityNotFoundException  si no existe el servicio
+     * @throws IllegalArgumentException si se intenta reasignar el servicio a otra profesional
+     *                                  o si el nuevo nombre ya existe para esa profesional
      */
     @Transactional
     public ServicioResponse actualizar(UUID id, ServicioRequest request) {
@@ -166,25 +168,22 @@ public class ServicioService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No se encontró el servicio con ID: " + id));
 
-        // Si cambió la profesional, buscar la nueva
-        Profesional profesional;
+        // Validar que no se intente reasignar el servicio a otra profesional
         if (!servicio.getProfesional().getId().equals(request.getProfesionalId())) {
-            profesional = profesionalRepository.findById(request.getProfesionalId())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "No se encontró la profesional con ID: " + request.getProfesionalId()));
-        } else {
-            profesional = servicio.getProfesional();
+            throw new IllegalArgumentException(
+                    "No se puede reasignar un servicio a otra profesional. "
+                    + "El servicio pertenece a la profesional con ID: "
+                    + servicio.getProfesional().getId());
         }
 
         // Si cambió el nombre, verificar que no esté duplicado para esa profesional
         if (!servicio.getNombre().equals(request.getNombre())
                 && servicioRepository.existsByNombreAndProfesionalId(
-                request.getNombre(), request.getProfesionalId())) {
+                request.getNombre(), servicio.getProfesional().getId())) {
             throw new IllegalArgumentException(
                     "La profesional ya tiene un servicio con el nombre: " + request.getNombre());
         }
 
-        servicio.setProfesional(profesional);
         servicio.setNombre(request.getNombre());
         servicio.setDescripcion(request.getDescripcion());
         servicio.setPrecio(request.getPrecio());

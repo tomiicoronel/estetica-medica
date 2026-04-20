@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+
 /**
  * Entidad JPA que representa a una profesional del centro de estética médica.
  *
@@ -101,6 +102,18 @@ public class Profesional {
     @OneToMany(mappedBy = "profesional", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Servicio> servicios = new ArrayList<>();
+
+    /**
+     * Lista de pacientes atendidos por esta profesional.
+     *
+     * <p>Relación {@code OneToMany} bidireccional mapeada por el campo {@code profesional} de la entidad
+     * {@link Paciente}. {@code cascade = ALL} propaga todas las operaciones (persist, merge, remove)
+     * a los pacientes asociados. {@code orphanRemoval = true} elimina automáticamente los pacientes
+     * que se desvinculen de la profesional.</p>
+     */
+    @OneToMany(mappedBy = "profesional", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Paciente> pacientes = new ArrayList<>();
 
     /** Fecha y hora en que se creó el registro. Se setea automáticamente y no se puede modificar. */
     @Column(name = "creado_en", updatable = false)
