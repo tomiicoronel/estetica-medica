@@ -1,0 +1,317 @@
+### ============================================================
+### API TESTS — Estética MVP
+### ============================================================
+### Cómo usar:
+### 1) Levantá la app (./mvnw spring-boot:run).
+### 2) Apretá el triángulo ▶ verde al lado de cada request.
+### 3) Los bloques "> {% ... %}" guardan automáticamente el ID
+###    del recurso recién creado para reutilizarlo en el siguiente.
+### ============================================================
+
+@host = http://localhost:8080
+
+
+### ============================================================
+### 1. PROFESIONAL
+### ============================================================
+
+### 1.1 Crear profesional — 201 Created
+POST {{host}}/api/profesionales
+Content-Type: application/json
+
+{
+  "nombre": "María",
+  "apellido": "Pérez",
+  "email": "maria.perez@estetica.com",
+  "telefono": "1144556677",
+  "especialidad": "Dermatología estética"
+}
+
+> {% client.global.set("profesionalId", response.body.id); %}
+
+
+### 1.2 Listar profesionales — 200 OK
+GET {{host}}/api/profesionales
+
+
+### 1.3 Buscar profesional por ID — 200 OK
+GET {{host}}/api/profesionales/{{profesionalId}}
+
+
+### 1.4 Actualizar profesional — 200 OK
+PUT {{host}}/api/profesionales/{{profesionalId}}
+Content-Type: application/json
+
+{
+  "nombre": "María",
+  "apellido": "Pérez López",
+  "email": "maria.perez@estetica.com",
+  "telefono": "1144556677",
+  "especialidad": "Dermatología estética avanzada"
+}
+
+
+### ============================================================
+### 2. PACIENTE (anidado bajo profesional)
+### ============================================================
+
+### 2.1 Crear paciente — 201 Created
+POST {{host}}/api/profesionales/{{profesionalId}}/pacientes
+Content-Type: application/json
+
+{
+  "nombre": "Ana",
+  "apellido": "García",
+  "dniCuit": "30123456",
+  "telefono": "1166778899",
+  "email": "ana.garcia@mail.com",
+  "fechaNacimiento": "1990-05-14",
+  "profesion": "Abogada",
+  "domicilio": "Av. Siempre Viva 742",
+  "obraSocial": "OSDE",
+  "numeroObraSocial": "123456",
+  "contactoEmergenciaNombre": "Luis García",
+  "contactoEmergenciaTelefono": "1188990011",
+  "contactoEmergenciaParentesco": "Esposo"
+}
+
+> {% client.global.set("pacienteId", response.body.id); %}
+
+
+### 2.2 Listar pacientes de la profesional — 200 OK
+GET {{host}}/api/profesionales/{{profesionalId}}/pacientes
+
+
+### 2.3 Listar solo los activos — 200 OK
+GET {{host}}/api/profesionales/{{profesionalId}}/pacientes/activos
+
+
+### 2.4 Buscar paciente por ID — 200 OK
+GET {{host}}/api/pacientes/{{pacienteId}}
+
+
+### 2.5 Actualizar paciente — 200 OK
+PUT {{host}}/api/pacientes/{{pacienteId}}
+Content-Type: application/json
+
+{
+  "profesionalId": "{{profesionalId}}",
+  "nombre": "Ana",
+  "apellido": "García",
+  "dniCuit": "30123456",
+  "telefono": "1166778899",
+  "email": "ana.garcia.nuevo@mail.com",
+  "fechaNacimiento": "1990-05-14"
+}
+
+
+### 2.6 Archivar paciente (soft delete) — 200 OK
+PATCH {{host}}/api/pacientes/{{pacienteId}}/estado?activo=false
+
+
+### 2.7 Reactivar paciente — 200 OK
+PATCH {{host}}/api/pacientes/{{pacienteId}}/estado?activo=true
+
+
+### ============================================================
+### 3. SERVICIO (anidado bajo profesional)
+### ============================================================
+
+### 3.1 Crear servicio — 201 Created
+POST {{host}}/api/profesionales/{{profesionalId}}/servicios
+Content-Type: application/json
+
+{
+  "nombre": "Limpieza facial profunda",
+  "descripcion": "Incluye exfoliación, extracción y máscara calmante",
+  "precio": 25000.00
+}
+
+> {% client.global.set("servicioId", response.body.id); %}
+
+
+### 3.2 Listar servicios de la profesional — 200 OK
+GET {{host}}/api/profesionales/{{profesionalId}}/servicios
+
+
+### 3.3 Buscar servicio por ID — 200 OK
+GET {{host}}/api/servicios/{{servicioId}}
+
+
+### 3.4 Actualizar precio del servicio — 200 OK
+PATCH {{host}}/api/servicios/{{servicioId}}/precio?precio=28000.00
+
+
+### 3.5 Desactivar servicio — 200 OK
+PATCH {{host}}/api/servicios/{{servicioId}}/estado?activo=false
+
+
+### ============================================================
+### 4. HISTORIA CLÍNICA FACIAL
+### ============================================================
+
+### 4.1 Crear ficha facial — 201 Created
+POST {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-facial
+Content-Type: application/json
+
+{
+  "hta": false,
+  "dbt": false,
+  "hipotiroidismo": false,
+  "hipertiroidismo": false,
+  "anemia": false,
+  "enfermedadesAutoinmunes": false,
+  "glaucoma": false,
+  "enfermedadNeuromuscular": false,
+  "trastornosCoagulacion": false,
+  "alteracionCicatrizacion": false,
+  "marcapasos": false,
+  "protesisMetalica": false,
+  "tbq": true,
+  "alcohol": false,
+  "alergicoHuevo": false,
+  "alergicoAnestesia": false,
+  "alergicoFish": false,
+  "embarazo": false,
+  "herpesLabial": true,
+  "aspirinaSemana": false,
+  "medicacionHabitual": "Losartán 50mg",
+  "exposicionSolar": true,
+  "usaProteccionSolar": true,
+  "proteccionSolarCual": "Eucerin FPS 50",
+  "proteccionSolarVecesDia": "2",
+  "habitosHigieneFacial": "Limpieza nocturna con agua micelar",
+  "tratamientoDomiciliario": "Retinol 0.3% nocturno",
+  "tratamientosPrevios": false,
+  "viajeProximoMes": false,
+  "seTomaFotografia": true,
+  "fototipoFitzpatrick": 3,
+  "gradoGlogau": 2,
+  "diagnosticoYTratamiento": "Fotoenvejecimiento moderado. Plan: peeling químico + protección solar estricta."
+}
+
+> {% client.global.set("fichaId", response.body.id); %}
+
+
+### 4.2 Obtener ficha facial del paciente — 200 OK
+GET {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-facial
+
+
+### 4.3 Actualizar ficha (PUT, JSON completo) — 200 OK
+### El frontend siempre manda el JSON entero, aunque la profesional
+### haya tocado un solo campo. Acá cambiamos "tbq" a false y agregamos
+### datos de un tratamiento previo y observaciones posteriores.
+PUT {{host}}/api/historia-clinica-facial/{{fichaId}}
+Content-Type: application/json
+
+{
+  "hta": false,
+  "dbt": false,
+  "hipotiroidismo": false,
+  "hipertiroidismo": false,
+  "anemia": false,
+  "enfermedadesAutoinmunes": false,
+  "glaucoma": false,
+  "enfermedadNeuromuscular": false,
+  "trastornosCoagulacion": false,
+  "alteracionCicatrizacion": false,
+  "marcapasos": false,
+  "protesisMetalica": false,
+  "tbq": false,
+  "alcohol": false,
+  "alergicoHuevo": false,
+  "alergicoAnestesia": false,
+  "alergicoFish": false,
+  "embarazo": false,
+  "herpesLabial": true,
+  "aspirinaSemana": false,
+  "medicacionHabitual": "Losartán 50mg",
+  "exposicionSolar": true,
+  "usaProteccionSolar": true,
+  "proteccionSolarCual": "ISDIN FPS 50+",
+  "proteccionSolarVecesDia": "3",
+  "habitosHigieneFacial": "Limpieza nocturna con agua micelar",
+  "tratamientoDomiciliario": "Retinol 0.3% nocturno + vitamina C AM",
+  "tratamientosPrevios": true,
+  "tratamientosPreviosCuales": "Peeling químico superficial",
+  "tratamientosPreviosRespuesta": "Buena tolerancia, sin eventos adversos",
+  "viajeProximoMes": false,
+  "seTomaFotografia": true,
+  "fototipoFitzpatrick": 3,
+  "gradoGlogau": 2,
+  "diagnosticoYTratamiento": "Fotoenvejecimiento moderado. Continuar con peeling + ácido hialurónico tópico.",
+  "observacionesPosteriores": "Paciente dejó de fumar. Mejor elasticidad a los 30 días."
+}
+
+
+### ============================================================
+### 5. CASOS DE ERROR (validación del GlobalExceptionHandler)
+### ============================================================
+
+### 5.1 Crear ficha duplicada — 409 Conflict
+POST {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-facial
+Content-Type: application/json
+
+{
+  "hta": true
+}
+
+
+### 5.2 Crear ficha para paciente inexistente — 404 Not Found
+POST {{host}}/api/pacientes/00000000-0000-0000-0000-000000000000/historia-clinica-facial
+Content-Type: application/json
+
+{
+  "hta": true
+}
+
+
+### 5.3 Obtener ficha de paciente inexistente — 404 Not Found
+GET {{host}}/api/pacientes/00000000-0000-0000-0000-000000000000/historia-clinica-facial
+
+
+### 5.4 Validación: fototipo fuera de rango (debe ser 1-6) — 400 Bad Request
+POST {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-facial
+Content-Type: application/json
+
+{
+  "fototipoFitzpatrick": 9
+}
+
+
+### 5.5 UUID mal formado en path — 400 Bad Request
+GET {{host}}/api/pacientes/no-es-uuid/historia-clinica-facial
+
+
+### 5.6 Actualizar ficha inexistente — 404 Not Found
+PUT {{host}}/api/historia-clinica-facial/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{
+  "hta": true
+}
+
+
+### 5.7 Crear profesional con email duplicado — 400 Bad Request
+POST {{host}}/api/profesionales
+Content-Type: application/json
+
+{
+  "nombre": "Otra",
+  "apellido": "Profesional",
+  "email": "maria.perez@estetica.com",
+  "telefono": "1100000000",
+  "especialidad": "Cosmiatría"
+}
+
+
+### 5.8 Crear paciente sin nombre — 400 Bad Request (validación @Valid)
+POST {{host}}/api/profesionales/{{profesionalId}}/pacientes
+Content-Type: application/json
+
+{
+  "apellido": "Sin Nombre",
+  "dniCuit": "99999999",
+  "telefono": "1100000000"
+}
+

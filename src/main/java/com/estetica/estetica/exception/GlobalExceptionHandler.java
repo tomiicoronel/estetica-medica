@@ -107,6 +107,27 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Captura {@link ResourceAlreadyExistsException} y devuelve un {@code 409 Conflict}.
+     *
+     * <p>Se lanza cuando se intenta crear un recurso que ya existe y por reglas
+     * de negocio no puede duplicarse (por ejemplo, una ficha clínica facial para
+     * un paciente que ya tiene una).</p>
+     *
+     * @param ex la excepción capturada con el mensaje de error
+     * @return respuesta HTTP 409 con timestamp, status, tipo de error y mensaje descriptivo
+     */
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceAlreadyExists(ResourceAlreadyExistsException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", 409);
+        body.put("error", "Conflicto");
+        body.put("mensaje", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    /**
      * Captura {@link MethodArgumentTypeMismatchException} y devuelve un {@code 400 Bad Request}.
      *
      * <p>Se lanza cuando un parámetro de la URL no puede convertirse al tipo esperado.

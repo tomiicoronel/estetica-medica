@@ -31,7 +31,6 @@ import java.util.UUID;
 public class PacienteRequest {
 
     /** UUID de la profesional a la que pertenece el paciente. Obligatorio. */
-    @NotNull(message = "El ID de la profesional es obligatorio")
     private UUID profesionalId;
 
     /** Nombre del paciente. Obligatorio, máximo 100 caracteres. */
