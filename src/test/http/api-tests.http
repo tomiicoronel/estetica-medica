@@ -315,3 +315,133 @@ Content-Type: application/json
   "telefono": "1100000000"
 }
 
+
+### ============================================================
+### 6. SPRINT 6 — SESIÓN CLÍNICA + FOTO PACIENTE
+### ============================================================
+
+### 6.1 Crear servicio activo para turnos — 201 Created
+POST {{host}}/api/profesionales/{{profesionalId}}/servicios
+Content-Type: application/json
+
+{
+  "nombre": "Peeling químico superficial",
+  "descripcion": "Peeling suave para renovación celular",
+  "precio": 30000.00
+}
+
+> {% client.global.set("servicioTurnoId", response.body.id); %}
+
+
+### 6.2 Crear turno que quedará REALIZADO — 201 Created
+POST {{host}}/api/profesionales/{{profesionalId}}/turnos
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "fechaHora": "2026-12-10T15:30:00",
+  "servicioIds": ["{{servicioTurnoId}}"],
+  "observaciones": "Turno para registrar sesión clínica"
+}
+
+> {% client.global.set("turnoRealizadoId", response.body.id); %}
+
+
+### 6.3 Confirmar turno — 200 OK
+PATCH {{host}}/api/turnos/{{turnoRealizadoId}}/estado?nuevoEstado=CONFIRMADO
+
+
+### 6.4 Marcar turno como REALIZADO — 200 OK
+PATCH {{host}}/api/turnos/{{turnoRealizadoId}}/estado?nuevoEstado=REALIZADO
+
+
+### 6.5 Crear sesión clínica para turno REALIZADO — 201 Created
+POST {{host}}/api/turnos/{{turnoRealizadoId}}/sesion-clinica
+Content-Type: application/json
+
+{
+  "tratamiento": "Peeling químico superficial en rostro completo",
+  "respuestaTolerancia": "Buena tolerancia, eritema leve esperado",
+  "observaciones": "Indicar hidratación y protector solar"
+}
+
+> {% client.global.set("sesionClinicaId", response.body.id); %}
+
+
+### 6.6 Obtener sesión clínica del turno — 200 OK
+GET {{host}}/api/turnos/{{turnoRealizadoId}}/sesion-clinica
+
+
+### 6.7 Listar sesiones clínicas del paciente — 200 OK
+GET {{host}}/api/pacientes/{{pacienteId}}/sesiones-clinicas
+
+
+### 6.8 Actualizar sesión clínica — 200 OK
+PUT {{host}}/api/sesiones-clinicas/{{sesionClinicaId}}
+Content-Type: application/json
+
+{
+  "tratamiento": "Peeling químico superficial + máscara calmante",
+  "respuestaTolerancia": "Muy buena tolerancia, sin molestias relevantes",
+  "observaciones": "Control en 15 días"
+}
+
+
+### 6.9 Intentar crear segunda sesión para el mismo turno — 409 Conflict
+POST {{host}}/api/turnos/{{turnoRealizadoId}}/sesion-clinica
+Content-Type: application/json
+
+{
+  "tratamiento": "Intento duplicado",
+  "respuestaTolerancia": "No debería crearse"
+}
+
+
+### 6.10 Crear turno PENDIENTE para probar error — 201 Created
+POST {{host}}/api/profesionales/{{profesionalId}}/turnos
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "fechaHora": "2026-12-11T15:30:00",
+  "servicioIds": ["{{servicioTurnoId}}"],
+  "observaciones": "Turno pendiente para probar validación"
+}
+
+> {% client.global.set("turnoPendienteId", response.body.id); %}
+
+
+### 6.11 Intentar crear sesión para turno PENDIENTE — 400 Bad Request
+POST {{host}}/api/turnos/{{turnoPendienteId}}/sesion-clinica
+Content-Type: application/json
+
+{
+  "tratamiento": "No debería permitirse",
+  "respuestaTolerancia": "El turno está pendiente"
+}
+
+
+### 6.12 Registrar foto vinculada a sesión clínica — 201 Created
+POST {{host}}/api/sesiones-clinicas/{{sesionClinicaId}}/fotos
+Content-Type: application/json
+
+{
+  "sesionClinicaId": "{{sesionClinicaId}}",
+  "descripcion": "Foto antes del tratamiento, perfil derecho"
+}
+
+> {% client.global.set("fotoPacienteId", response.body.id); %}
+
+
+### 6.13 Listar fotos por paciente — 200 OK
+GET {{host}}/api/pacientes/{{pacienteId}}/fotos
+
+
+### 6.14 Listar fotos por sesión clínica — 200 OK
+GET {{host}}/api/sesiones-clinicas/{{sesionClinicaId}}/fotos
+
+
+### 6.15 Eliminar foto — 204 No Content
+DELETE {{host}}/api/fotos/{{fotoPacienteId}}
+
+
