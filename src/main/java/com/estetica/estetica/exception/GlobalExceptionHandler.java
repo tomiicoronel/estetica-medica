@@ -5,6 +5,7 @@ import com.estetica.estetica.dto.response.ValidationErrorResponse;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -94,6 +95,18 @@ public class GlobalExceptionHandler {
                 .status(400)
                 .error("Parámetro inválido")
                 .mensaje(mensaje)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(400)
+                .error("JSON inválido")
+                .mensaje("El cuerpo de la solicitud tiene un formato inválido o contiene valores no permitidos.")
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
